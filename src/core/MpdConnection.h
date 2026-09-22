@@ -2,6 +2,7 @@
 
 #include <QString>
 #include <mpd/client.h>
+#include "MpdTypes.h"
 
 class MpdConnection{
 	public:
@@ -20,6 +21,9 @@ class MpdConnection{
 		bool togglePause();
 		bool next();
 		bool previous();
+
+		MpdTypes::PlaybackState fetchPlaybackState();
+		SongMetadata fetchCurrentSong();
 
 	private:
 		struct mpd_connection* m_conn = nullptr;

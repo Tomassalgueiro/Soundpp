@@ -1,7 +1,20 @@
-#include <iostream>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-using namespace std;
+int main(int argc, char *argv[]) {
+    QGuiApplication app(argc, argv);
 
-int main(){
-	cout << "hello world!" << endl;
+    QQmlApplicationEngine engine;
+
+    QObject::connect(
+        &engine,
+        &QQmlApplicationEngine::objectCreationFailed,
+        &app,
+        []() { QCoreApplication::exit(-1); },
+        Qt::QueuedConnection
+    );
+
+    engine.loadFromModule("PlayerBackend", "Main");
+
+    return app.exec();
 }

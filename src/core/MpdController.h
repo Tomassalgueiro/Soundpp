@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QTimer>
 #include <QtQml/qqmlregistration.h>
 
 #include "MpdConnection.h"
@@ -39,8 +40,12 @@ signals:
     void playbackStateChanged();
     void currentSongChanged();
 
+private slots:
+	void updateStatus();
+
 private:
     MpdConnection m_connection;
     MpdTypes::PlaybackState m_playbackState = MpdTypes::PlaybackState::Stopped;
     SongMetadata m_currentSong;
+    QTimer m_pollTimer;
 };

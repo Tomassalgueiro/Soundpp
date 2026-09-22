@@ -1,12 +1,16 @@
 #include "MpdController.h"
 #include "core/MpdTypes.h"
 #include <QDebug>
+#include <mpd/player.h>
 
 MpdController::MpdController(QObject *parent)
     : QObject(parent){
 	    if (m_connection.connectToHost("127.0.0.1", 6600)){
-		m_connection.testConnection();
 		emit connectionChanged();
+		updateStatus();
+
+		connect(&m_pollTimer, &QTimer::timeout, this, &MpdController::updateStatus);
+		m_pollTimer.start(500);
 	    }
 }
 
@@ -25,22 +29,33 @@ SongMetadata MpdController::currentSong() const
     return m_currentSong;
 }
 
-bool MpdConnection::play(){
-
+void MpdController::togglePlayPause(){
+	m_connection.togglePause();
+	updateStatus();
 }
 
-bool MpdConnection::pause(bool enable){
-
+void MpdController::next(){
+	m_connection.next();
+	updateStatus();
 }
 
-bool MpdConnection::togglePause(){
-
+void MpdController::previous(){
+	m_connection.previous();
+	updateStatus();
 }
 
-bool MpdConnection::next(){
+void MpdController::updateStatus(){
+	if(!m_connection.isConnected()) return;
 
-}
+	MpdTypes::PlaybackState newState = m_connection.fetchPlaybackState();
+	if (newState != m_playbackState){
+		m_playbackState = newState;
+		emit playbackStateChanged();
+	}
 
-bool MpdConnection::previous(){
-
+	SongMetadata newSong = m_connection.fetchCurrentSong();
+	if(newSong.title != m_currentSong.title || newSong.artist != m_currentSong.artist){
+		m_currentSong = newSong;
+		emit currentSongChanged();
+	}
 }

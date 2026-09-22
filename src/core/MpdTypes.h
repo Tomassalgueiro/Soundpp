@@ -3,10 +3,14 @@
 #include <QObject>
 #include <QString>
 #include <qobject.h>
+#include <qqmlintegration.h>
 #include <qtmetamacros.h>
+#include <QtQml/qqmlregistration.h>
 
 class MpdTypes{
 	Q_GADGET
+	QML_NAMED_ELEMENT(MpdTypes)
+	QML_UNCREATABLE("MpdTypes is an enum and cannot be isntatiated in QML")
 	// stores the state of the mpd player
 	public:
 		enum class PlaybackState { 
