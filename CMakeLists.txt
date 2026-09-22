@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(MpdMusicPlayer
+project(Soundpp
     VERSION 0.1.0
     LANGUAGES CXX
 )
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -20,11 +21,6 @@ pkg_check_modules(MPDCLIENT REQUIRED IMPORTED_TARGET libmpdclient)
 
 set(SOURCES
     src/main.cpp
-    src/MainWindow.cpp
-    src/MainWindow.h
-    src/MainWindow.ui
-    src/MpdController.cpp
-    src/MpdController.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

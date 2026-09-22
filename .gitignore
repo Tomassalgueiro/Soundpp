@@ -1,2 +1,6 @@
 implementation_plan.txt
+.qt/
+build/
+compile_commands.json
+CMakeFiles/
 
