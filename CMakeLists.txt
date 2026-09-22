@@ -29,9 +29,11 @@ qt_add_qml_module(${PROJECT_NAME}
     QML_FILES
     src/ui/Main.qml
     SOURCES
-        # Future C++ backend sources with QML_ELEMENT macros go here, e.g.:
-        # src/MpdController.h
-        # src/MpdController.cpp
+    	src/core/MpdTypes.h
+	src/core/MpdConnection.h
+	src/core/MpdConnection.cpp
+    	src/core/MpdController.h
+	src/core/MpdController.cpp
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Core
@@ -44,4 +46,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/core
 )
