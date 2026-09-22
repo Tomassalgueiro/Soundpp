@@ -28,6 +28,7 @@ qt_add_qml_module(${PROJECT_NAME}
     VERSION 1.0
     QML_FILES
     src/ui/Main.qml
+    src/ui/TrackSlider.qml
     SOURCES
     	src/core/MpdTypes.h
 	src/core/MpdConnection.h

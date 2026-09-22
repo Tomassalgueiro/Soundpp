@@ -22,8 +22,11 @@ class MpdConnection{
 		bool next();
 		bool previous();
 
-		MpdTypes::PlaybackState fetchPlaybackState();
+		PlaybackState fetchPlaybackState();
 		SongMetadata fetchCurrentSong();
+
+		unsigned fetchElapsedTime();
+		bool seek(unsigned seconds);
 
 	private:
 		struct mpd_connection* m_conn = nullptr;

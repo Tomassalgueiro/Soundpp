@@ -16,54 +16,75 @@ ApplicationWindow {
 
     Column {
         anchors.centerIn: parent
-        spacing: 16
-        width: parent.width - 60
+	width: parent.width - 60
+        spacing: 20
 
-        // Song Information
-        Column {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 6
+	    Column {
+		anchors.centerIn: parent
+		width: parent.width - 60
+		spacing: 20
 
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: mpd.currentSong.title !== "" ? mpd.currentSong.title : "No Track Loaded"
-                color: "#cdd6f4"
-                font.pixelSize: 22
-                font.bold: true
-                elide: Text.ElideRight
-            }
+		    Text {
+			anchors.horizontalCenter: parent.horizontalCenter
+			text: mpd.currentSong.title !== "" ? mpd.currentSong.title : "No Track"
+			color: "#cdd6f4"
+			font.pixelSize: 22
+			font.bold: true
+			elide: Text.ElideRight
+			width: parent.width
+			horizontalAlignment: Text.AlignHCenter
+		    }
+		    Text {
+			anchors.horizontalCenter: parent.horizontalCenter
+			visible: mpd.currentSong.artist !== "" || mpd.currentSong.album !== ""
+			text: {
+			    var artist = mpd.currentSong.artist || "Unknown Artist"
+			    var album = mpd.currentSong.album || "Unknown Album"
+			    return artist + " on " + album
+			}
+			color: "#a6adc8"
+			font.pixelSize: 15
+			elide: Text.ElideRight
+			width: parent.width
+			horizontalAlignment: Text.AlignHCenter
+		    }
 
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: mpd.currentSong.artist !== "" ? (mpd.currentSong.artist + " — " + mpd.currentSong.album) : ""
-                color: "#a6adc8"
-                font.pixelSize: 15
-                elide: Text.ElideRight
-            }
-        }
 
-        // Controls
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            spacing: 14
+	    }
 
-            Button {
-                text: "⏮"
-                enabled: mpd.isConnected
-                onClicked: mpd.previous()
-            }
+	    TrackSlider {
+		    width: parent.width
+		    duration: mpd.currentSong.duration
+		    elapsedTime: mpd.elapsedTime
+		    isConnected: mpd.isConnected
 
-            Button {
-                text: mpd.playbackState === MpdTypes.Playing ? "⏸ " : "▶"
-                enabled: mpd.isConnected
-                onClicked: mpd.togglePlayPause()
-            }
+		    onSeekRequested: function(seconds){
+			    mpd.seek(seconds)
+		    }
+	    }
+	    
 
-            Button {
-                text: "⏭"
-                enabled: mpd.isConnected
-                onClicked: mpd.next()
-            }
-        }
-    }
+	    Row {
+	        anchors.horizontalCenter: parent.horizontalCenter
+	        spacing: 14
+
+                Button {
+                    text: "⏮"
+                    enabled: mpd.isConnected
+                    onClicked: mpd.previous()
+                }
+     
+                Button {
+                    text: mpd.playbackState === MpdController.Playing ? "⏸ " : "▶"
+                    enabled: mpd.isConnected
+                    onClicked: mpd.togglePlayPause()
+                }
+     
+                Button {
+                    text: "⏭"
+                    enabled: mpd.isConnected
+                    onClicked: mpd.next()
+                }
+          }
+     }
 }

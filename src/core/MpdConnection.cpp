@@ -1,4 +1,5 @@
 #include "MpdConnection.h"
+#include "MpdController.h"
 #include <mpd/status.h>
 #include <mpd/song.h>
 #include <QDebug>
@@ -126,21 +127,21 @@ bool MpdConnection::previous(){
 	return true;
 }
 
-MpdTypes::PlaybackState MpdConnection::fetchPlaybackState(){
-	if (!m_conn) return MpdTypes::PlaybackState::Stopped;
+PlaybackState MpdConnection::fetchPlaybackState(){
+	if (!m_conn) return PlaybackState::Stopped;
 
 	struct mpd_status* status = mpd_run_status(m_conn);
 	if (!status){
 		checkError("fetching status");
-		return MpdTypes::PlaybackState::Stopped;
+		return PlaybackState::Stopped;
 	}
 
 	enum mpd_state state = mpd_status_get_state(status);
 
 	switch(state){
-		case MPD_STATE_PLAY: return MpdTypes::PlaybackState::Playing;
-		case MPD_STATE_PAUSE: return MpdTypes::PlaybackState::Paused;
-		default:	     return MpdTypes::PlaybackState::Stopped; 
+		case MPD_STATE_PLAY: return PlaybackState::Playing;
+		case MPD_STATE_PAUSE: return PlaybackState::Paused;
+		default:	     return PlaybackState::Stopped; 
 	}
 }
 
@@ -161,4 +162,28 @@ SongMetadata MpdConnection::fetchCurrentSong(){
 
 	mpd_song_free(song);
 	return meta;
+}
+
+unsigned MpdConnection::fetchElapsedTime(){
+	if(!m_conn) return 0;
+	 
+	struct mpd_status* status = mpd_run_status(m_conn);
+	if(!status){
+		checkError("fetching status for elapsed time");
+		return 0;
+	}
+
+	unsigned elapsed = mpd_status_get_elapsed_time(status);
+	mpd_status_free(status);
+
+	return elapsed;
+}
+
+bool MpdConnection::seek(unsigned seconds){
+	if(!m_conn) return false;
+
+	if(!mpd_run_seek_current(m_conn, seconds, false)){
+		return checkError("seeking");
+	}
+	return true;
 }

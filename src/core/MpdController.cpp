@@ -19,7 +19,7 @@ bool MpdController::isConnected() const
     return m_connection.isConnected();
 }
 
-MpdTypes::PlaybackState MpdController::playbackState() const
+MpdController::PlaybackState MpdController::playbackState() const
 {
     return m_playbackState;
 }
@@ -47,7 +47,7 @@ void MpdController::previous(){
 void MpdController::updateStatus(){
 	if(!m_connection.isConnected()) return;
 
-	MpdTypes::PlaybackState newState = m_connection.fetchPlaybackState();
+	MpdController::PlaybackState newState = static_cast<PlaybackState>(m_connection.fetchPlaybackState());
 	if (newState != m_playbackState){
 		m_playbackState = newState;
 		emit playbackStateChanged();
@@ -58,4 +58,22 @@ void MpdController::updateStatus(){
 		m_currentSong = newSong;
 		emit currentSongChanged();
 	}
+
+	int newElapsed = static_cast<int>(m_connection.fetchElapsedTime());
+	if (newElapsed != m_elapsedTime){
+		m_elapsedTime = newElapsed;
+		emit elapsedTimeChanged();
+
+	}
+}
+
+int MpdController::elapsedTime() const {
+	return m_elapsedTime;
+}
+
+void MpdController::seek(int seconds) {
+
+	m_connection.seek(static_cast<unsigned>(seconds));
+	m_elapsedTime = seconds;
+	emit elapsedTimeChanged();	
 }
