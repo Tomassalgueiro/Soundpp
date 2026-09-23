@@ -4,6 +4,7 @@
 #include <mpd/entity.h>
 #include <mpd/song.h>
 #include <QDebug>
+#include <qstringview.h>
 
 MpdConnection::MpdConnection() = default;
 
@@ -261,4 +262,34 @@ bool MpdConnection::playFile(const QString& uri) {
     return true;
 }
 
+QByteArray MpdConnection::fetchAlbumArt(const QString& uri) {
+    QByteArray imageBytes;
+    if (!m_conn || uri.isEmpty()) return imageBytes;
 
+    char chunk[8192];
+    unsigned offset = 0;
+
+    while (true) {
+        int bytesRead = mpd_run_readpicture(
+            m_conn,
+            uri.toUtf8().constData(),
+            offset,
+            chunk,
+            sizeof(chunk)
+        );
+
+        if (bytesRead < 0) {
+            checkError("reading picture");
+            break;
+        }
+
+        if (bytesRead == 0) {
+            break;
+        }
+
+        imageBytes.append(chunk, bytesRead);
+        offset += static_cast<unsigned>(bytesRead);
+    }
+
+    return imageBytes;
+}

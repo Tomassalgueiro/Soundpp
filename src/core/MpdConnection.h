@@ -3,6 +3,7 @@
 #include <QString>
 #include <QList>
 #include <mpd/client.h>
+#include <qstringview.h>
 #include "MpdTypes.h"
 
 class MpdConnection{
@@ -31,6 +32,8 @@ class MpdConnection{
 
 		QList<FileSystemItem> listDirectory(const QString& path = "");
 		bool playFile(const QString& uri);
+
+		QByteArray fetchAlbumArt(const QString& uri);
 
 	private:
 		struct mpd_connection* m_conn = nullptr;

@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QtQml/qqmlregistration.h>
+#include <qtmetamacros.h>
 
 #include "MpdConnection.h"
 #include "MpdTypes.h"
@@ -44,6 +45,9 @@ public:
 	       READ currentPath 
 	       NOTIFY currentPathChanged)
 
+    Q_PROPERTY(QString coverArtUrl
+	       READ coverArtUrl
+	       NOTIFY coverArtUrlChanged)
 
 public:
     explicit MpdController(QObject *parent = nullptr);
@@ -54,6 +58,7 @@ public:
     int elapsedTime() const;
     QList<FileSystemItem> currentFiles() const;
     QString currentPath() const;
+    QString coverArtUrl() const;
 
 
     Q_INVOKABLE void togglePlayPause();
@@ -71,9 +76,11 @@ signals:
     void elapsedTimeChanged();
     void currentFilesChanged();
     void currentPathChanged();
+    void coverArtUrlChanged();
 
 private slots:
 	void updateStatus();
+	void updateCoverArt(const QString& uri);
 
 private:
     MpdConnection m_connection;
@@ -83,4 +90,5 @@ private:
     QTimer m_pollTimer;
     QList<FileSystemItem> m_currentFiles;
     QString m_currentPath = "";
+    QString m_coverArtUrl;
 };

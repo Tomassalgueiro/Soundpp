@@ -30,7 +30,7 @@ qt_add_qml_module(${PROJECT_NAME}
     src/ui/Main.qml
     src/ui/TrackSlider.qml
     RESOURCES
-    src/ui/assets/default.png
+    src/ui/assets/default_album.png
     SOURCES
     	src/core/MpdTypes.h
 	src/core/MpdConnection.h

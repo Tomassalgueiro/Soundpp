@@ -2,6 +2,9 @@
 #include "core/MpdTypes.h"
 #include <QDebug>
 #include <mpd/player.h>
+#include <QStandardPaths>
+#include <QDir>
+#include <QFile>
 
 MpdController::MpdController(QObject *parent)
     : QObject(parent){
@@ -58,6 +61,7 @@ void MpdController::updateStatus(){
 	if(newSong.title != m_currentSong.title || newSong.artist != m_currentSong.artist){
 		m_currentSong = newSong;
 		emit currentSongChanged();
+		updateCoverArt(m_currentSong.uri);
 	}
 
 	int newElapsed = static_cast<int>(m_connection.fetchElapsedTime());
@@ -108,4 +112,39 @@ void MpdController::goUp() {
 void MpdController::playItem(const QString& uri) {
     m_connection.playFile(uri);
     updateStatus();
+}
+
+QString MpdController::coverArtUrl() const {
+	return m_coverArtUrl;
+}
+
+void MpdController::updateCoverArt(const QString &uri){
+if (uri.isEmpty()) {
+        m_coverArtUrl = "";
+        emit coverArtUrlChanged();
+        return;
+    }
+
+    QByteArray imgData = m_connection.fetchAlbumArt(uri);
+    if (imgData.isEmpty()) {
+        m_coverArtUrl = "";
+        emit coverArtUrlChanged();
+        return;
+    }
+
+    QString cacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    QDir().mkpath(cacheDir);
+    QString filePath = cacheDir + "/cover.jpg";
+
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(imgData);
+        file.close();
+        
+        m_coverArtUrl = "file://" + filePath + "?t=" + QString::number(QDateTime::currentMSecsSinceEpoch());
+    } else {
+        m_coverArtUrl = "";
+    }
+
+    emit coverArtUrlChanged();
 }

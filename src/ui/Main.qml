@@ -128,7 +128,9 @@ ApplicationWindow {
                             asynchronous: true
                             smooth: true
 
-                            source: "assets/default_album.png"
+			    source: mpd.currentSong.uri !== "" 
+				? mpd.coverArtUrl
+				: "assets/default.png"
 
                             onStatusChanged: {
                                 if (status === Image.Error) {
@@ -180,7 +182,14 @@ ApplicationWindow {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     visible: mpd.currentSong.artist !== ""
-                    text: mpd.currentSong.artist + (mpd.currentSong.album !== "" ? " on " + mpd.currentSong.album : "")
+		    text: {
+			    var artist = mpd.currentSong.artist
+			    var album = mpd.currentSong.album
+
+			    var hasAlbum = album && album.trim() !== "" && album !== "Uknown Album"
+
+			    return hasAlbum ? (artist + " on " + album) : artist
+		    }
                     color: "#a6adc8"
                     font.pixelSize: 13
                 }
