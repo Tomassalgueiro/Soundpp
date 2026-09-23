@@ -4,10 +4,12 @@ import PlayerBackend 1.0
 
 ApplicationWindow {
     id: root
-    width: 520
-    height: 360
+    width: 800
+    height: 600
+    minimumWidth: 640
+    minimumHeight: 480
     visible: true
-    title: qsTr("MPD Player")
+    title: qsTr("MPD Music Browser")
     color: "#1e1e2e"
 
     MpdController {
@@ -15,76 +17,208 @@ ApplicationWindow {
     }
 
     Column {
-        anchors.centerIn: parent
-	width: parent.width - 60
-        spacing: 20
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 12
 
-	    Column {
-		anchors.centerIn: parent
-		width: parent.width - 60
-		spacing: 20
+	Row {
+            width: parent.width
+            height: parent.height - playerControlsPanel.height - parent.spacing - 32
+            spacing: 16
 
-		    Text {
-			anchors.horizontalCenter: parent.horizontalCenter
-			text: mpd.currentSong.title !== "" ? mpd.currentSong.title : "No Track"
-			color: "#cdd6f4"
-			font.pixelSize: 22
-			font.bold: true
-			elide: Text.ElideRight
-			width: parent.width
-			horizontalAlignment: Text.AlignHCenter
-		    }
-		    Text {
-			anchors.horizontalCenter: parent.horizontalCenter
-			visible: mpd.currentSong.artist !== "" || mpd.currentSong.album !== ""
-			text: {
-			    var artist = mpd.currentSong.artist || "Unknown Artist"
-			    var album = mpd.currentSong.album || "Unknown Album"
-			    return artist + " on " + album
-			}
-			color: "#a6adc8"
-			font.pixelSize: 15
-			elide: Text.ElideRight
-			width: parent.width
-			horizontalAlignment: Text.AlignHCenter
-		    }
+            Column {
+                width: (parent.width - parent.spacing) * 0.70
+                height: parent.height
+                spacing: 8
 
+                Row {
+                    width: parent.width
+                    spacing: 8
 
-	    }
+                    Button {
+                        text: "↑ Up"
+                        enabled: mpd.currentPath !== ""
+                        onClicked: mpd.goUp()
+                    }
 
-	    TrackSlider {
-		    width: parent.width
-		    duration: mpd.currentSong.duration
-		    elapsedTime: mpd.elapsedTime
-		    isConnected: mpd.isConnected
+                    Label {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: mpd.currentPath === "" ? "/ (Music Root)" : "/" + mpd.currentPath
+                        color: "#a6adc8"
+                        font.pixelSize: 13
+                        elide: Text.ElideLeft
+                        width: parent.width - 80
+                    }
+                }
 
-		    onSeekRequested: function(seconds){
-			    mpd.seek(seconds)
-		    }
-	    }
-	    
+                ListView {
+                    id: fileList
+                    width: parent.width
+                    height: parent.height - 40
+                    clip: true
+                    model: mpd.currentFiles
 
-	    Row {
-	        anchors.horizontalCenter: parent.horizontalCenter
-	        spacing: 14
+                    delegate: ItemDelegate {
+                        width: fileList.width
+                        height: 38
+
+                        contentItem: Row {
+                            spacing: 10
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Text {
+                                text: modelData.isDirectory ? "📁" : "🎵"
+                                font.pixelSize: 15
+                            }
+
+                            Text {
+                                text: modelData.name
+                                color: modelData.isDirectory ? "#89b4fa" : "#cdd6f4"
+                                font.pixelSize: 13
+                                font.bold: modelData.isDirectory
+                                elide: Text.ElideRight
+                                width: fileList.width - 50
+                            }
+                        }
+
+                        background: Rectangle {
+                            color: parent.hovered ? "#313244" : "transparent"
+                            radius: 4
+                        }
+
+                        onClicked: {
+                            if (modelData.isDirectory) {
+                                mpd.openFolder(modelData.path)
+                            } else {
+                                mpd.playItem(modelData.path)
+                            }
+                        }
+                    }
+
+                    ScrollBar.vertical: ScrollBar {
+                        active: true
+                    }
+                }
+            }
+
+            Rectangle {
+                width: (parent.width - parent.spacing) * 0.30
+                height: parent.height
+                color: "#181825"
+                radius: 8
+                clip: true
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 12
+                    width: parent.width - 24
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: Math.min(parent.width, 220)
+                        height: width
+                        radius: 8
+                        color: "#313244"
+                        clip: true
+
+                        Image {
+                            id: albumCover
+                            anchors.fill: parent
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                            smooth: true
+
+                            source: "assets/default_album.png"
+
+                            onStatusChanged: {
+                                if (status === Image.Error) {
+                                    source = "assets/default_album.png"
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: mpd.currentSong.album || "No Album"
+                        color: "#a6adc8"
+                        font.pixelSize: 12
+                        font.italic: true
+                        elide: Text.ElideRight
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            width: parent.width
+            height: 1
+            color: "#313244"
+        }
+
+        Column {
+            id: playerControlsPanel
+            width: parent.width
+            spacing: 8
+
+            Column {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width
+                spacing: 2
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: mpd.currentSong.title !== "" ? mpd.currentSong.title : "No Track Selected"
+                    color: "#cdd6f4"
+                    font.pixelSize: 18
+                    font.bold: true
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: mpd.currentSong.artist !== ""
+                    text: mpd.currentSong.artist + (mpd.currentSong.album !== "" ? " on " + mpd.currentSong.album : "")
+                    color: "#a6adc8"
+                    font.pixelSize: 13
+                }
+            }
+
+            TrackSlider {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width - 40
+                duration: mpd.currentSong.duration
+                elapsedTime: mpd.elapsedTime
+                isConnected: mpd.isConnected
+                onSeekRequested: function(seconds) {
+                    mpd.seek(seconds)
+                }
+            }
+
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 14
 
                 Button {
                     text: "⏮"
                     enabled: mpd.isConnected
                     onClicked: mpd.previous()
                 }
-     
+
                 Button {
-                    text: mpd.playbackState === MpdController.Playing ? "⏸ " : "▶"
+                    text: mpd.playbackState === MpdController.Playing ? "⏸" : "▶"
                     enabled: mpd.isConnected
                     onClicked: mpd.togglePlayPause()
                 }
-     
+
                 Button {
                     text: "⏭"
                     enabled: mpd.isConnected
                     onClicked: mpd.next()
                 }
-          }
-     }
+            }
+        }
+    }
 }

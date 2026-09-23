@@ -8,6 +8,7 @@ MpdController::MpdController(QObject *parent)
 	    if (m_connection.connectToHost("127.0.0.1", 6600)){
 		emit connectionChanged();
 		updateStatus();
+		openFolder("");
 
 		connect(&m_pollTimer, &QTimer::timeout, this, &MpdController::updateStatus);
 		m_pollTimer.start(500);
@@ -76,4 +77,35 @@ void MpdController::seek(int seconds) {
 	m_connection.seek(static_cast<unsigned>(seconds));
 	m_elapsedTime = seconds;
 	emit elapsedTimeChanged();	
+}
+
+QList<FileSystemItem> MpdController::currentFiles() const {
+    return m_currentFiles;
+}
+
+QString MpdController::currentPath() const {
+    return m_currentPath;
+}
+
+void MpdController::openFolder(const QString& path) {
+    m_currentPath = path;
+    m_currentFiles = m_connection.listDirectory(path);
+    emit currentPathChanged();
+    emit currentFilesChanged();
+}
+
+void MpdController::goUp() {
+    if (m_currentPath.isEmpty()) return;
+
+    int lastSlash = m_currentPath.lastIndexOf('/');
+    if (lastSlash == -1) {
+        openFolder(""); 
+    } else {
+        openFolder(m_currentPath.left(lastSlash));
+    }
+}
+
+void MpdController::playItem(const QString& uri) {
+    m_connection.playFile(uri);
+    updateStatus();
 }

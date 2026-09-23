@@ -36,6 +36,15 @@ public:
 	       READ elapsedTime 
 	       NOTIFY elapsedTimeChanged)
 
+    Q_PROPERTY(QList<FileSystemItem> currentFiles
+	       READ currentFiles 
+	       NOTIFY currentFilesChanged)
+
+    Q_PROPERTY(QString currentPath 
+	       READ currentPath 
+	       NOTIFY currentPathChanged)
+
+
 public:
     explicit MpdController(QObject *parent = nullptr);
 
@@ -43,17 +52,25 @@ public:
     PlaybackState playbackState() const;
     SongMetadata currentSong() const;
     int elapsedTime() const;
+    QList<FileSystemItem> currentFiles() const;
+    QString currentPath() const;
+
 
     Q_INVOKABLE void togglePlayPause();
     Q_INVOKABLE void next();
     Q_INVOKABLE void previous();
     Q_INVOKABLE void seek(int seconds);
+    Q_INVOKABLE void openFolder(const QString& path);
+    Q_INVOKABLE void goUp();
+    Q_INVOKABLE void playItem(const QString& uri);
 
 signals:
     void connectionChanged();
     void playbackStateChanged(); 
     void currentSongChanged();
     void elapsedTimeChanged();
+    void currentFilesChanged();
+    void currentPathChanged();
 
 private slots:
 	void updateStatus();
@@ -64,4 +81,6 @@ private:
     SongMetadata m_currentSong;
     int m_elapsedTime = 0;
     QTimer m_pollTimer;
+    QList<FileSystemItem> m_currentFiles;
+    QString m_currentPath = "";
 };

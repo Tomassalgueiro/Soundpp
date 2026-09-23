@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QString>
+#include <QList>
 #include <mpd/client.h>
 #include "MpdTypes.h"
 
@@ -27,6 +28,9 @@ class MpdConnection{
 
 		unsigned fetchElapsedTime();
 		bool seek(unsigned seconds);
+
+		QList<FileSystemItem> listDirectory(const QString& path = "");
+		bool playFile(const QString& uri);
 
 	private:
 		struct mpd_connection* m_conn = nullptr;

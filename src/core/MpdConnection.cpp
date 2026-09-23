@@ -1,6 +1,7 @@
 #include "MpdConnection.h"
-#include "MpdController.h"
+#include <mpd/response.h>
 #include <mpd/status.h>
+#include <mpd/entity.h>
 #include <mpd/song.h>
 #include <QDebug>
 
@@ -137,7 +138,6 @@ PlaybackState MpdConnection::fetchPlaybackState(){
 	}
 
 	enum mpd_state state = mpd_status_get_state(status);
-
 	switch(state){
 		case MPD_STATE_PLAY: return PlaybackState::Playing;
 		case MPD_STATE_PAUSE: return PlaybackState::Paused;
@@ -152,6 +152,10 @@ SongMetadata MpdConnection::fetchCurrentSong(){
 
 	struct mpd_song* song = mpd_run_current_song(m_conn);
 
+	if (song == nullptr){
+		return meta;
+	}
+
 	const char* title = mpd_song_get_tag(song, MPD_TAG_TITLE, 0);
 	const char* artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0);
 	const char* album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0);
@@ -159,6 +163,8 @@ SongMetadata MpdConnection::fetchCurrentSong(){
 	meta.title = title ? QString::fromUtf8(title) : QStringLiteral("Uknown Title");
 	meta.artist = artist ? QString::fromUtf8(artist) : QStringLiteral("Uknown Artist");
 	meta.album = album ? QString::fromUtf8(album) : QStringLiteral("Uknown Album");
+	meta.duration = mpd_song_get_duration(song);
+	meta.uri = QString::fromUtf8(mpd_song_get_uri(song));
 
 	mpd_song_free(song);
 	return meta;
@@ -187,3 +193,72 @@ bool MpdConnection::seek(unsigned seconds){
 	}
 	return true;
 }
+
+QList<FileSystemItem> MpdConnection::listDirectory(const QString &path){
+	QList<FileSystemItem> items;
+	if (!m_conn) return items;	
+
+	if(!mpd_send_list_meta(m_conn, path.toUtf8().constData())){
+		checkError("listing directory");
+		return items;
+	}
+	
+	struct mpd_entity* entity;
+
+	while((entity = mpd_recv_entity(m_conn)) != nullptr){
+		enum mpd_entity_type type = mpd_entity_get_type(entity);
+
+		if (type == MPD_ENTITY_TYPE_DIRECTORY) {
+		    const struct mpd_directory* dir = mpd_entity_get_directory(entity);
+		    QString dirPath = QString::fromUtf8(mpd_directory_get_path(dir));
+		    
+		    // Extract the simple folder name from the full path
+		    QString folderName = dirPath.section('/', -1);
+
+		    FileSystemItem item;
+		    item.name = folderName;
+		    item.path = dirPath;
+		    item.isDirectory = true;
+		    items.append(item);
+		} else if (type == MPD_ENTITY_TYPE_SONG) {
+		    const struct mpd_song* song = mpd_entity_get_song(entity);
+		    QString uri = QString::fromUtf8(mpd_song_get_uri(song));
+		    
+		    const char* titleTag = mpd_song_get_tag(song, MPD_TAG_TITLE, 0);
+		    QString displayName = titleTag ? QString::fromUtf8(titleTag) : uri.section('/', -1);
+
+		    FileSystemItem item;
+		    item.name = displayName;
+		    item.path = uri;
+		    item.isDirectory = false;
+		    items.append(item);
+		}
+
+		mpd_entity_free(entity);
+	}
+
+	mpd_response_finish(m_conn);
+	checkError("finishing directory list");
+	
+	return items;
+}
+
+bool MpdConnection::playFile(const QString& uri) {
+    if (!m_conn) return false;
+
+    if (!mpd_run_clear(m_conn)) {
+        return checkError("clearing queue");
+    }
+
+    if (!mpd_run_add(m_conn, uri.toUtf8().constData())) {
+        return checkError("adding track to queue");
+    }
+
+    if (!mpd_run_play_pos(m_conn, 0)) {
+        return checkError("playing track");
+    }
+
+    return true;
+}
+
+

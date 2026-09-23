@@ -10,7 +10,7 @@ Item {
 
     signal seekRequested(int seconds)
 
-    implicitHeight: columnLayout.implicitHeight
+    implicitHeight: layout.implicitHeight
     implicitWidth: 300
 
     function formatTime(totalSeconds) {
@@ -20,7 +20,7 @@ Item {
     }
 
     Column {
-        id: columnLayout
+        id: layout
         anchors.fill: parent
         spacing: 4
 
@@ -30,8 +30,7 @@ Item {
             from: 0
             to: Math.max(root.duration, 1)
             enabled: root.isConnected && root.duration > 0
-
-            value: !pressed ? root.elapsedTime : value
+            value: pressed ? value : root.elapsedTime
 
             onMoved: {
                 root.seekRequested(Math.round(value))
