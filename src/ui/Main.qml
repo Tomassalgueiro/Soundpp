@@ -130,11 +130,11 @@ ApplicationWindow {
 
 			    source: mpd.currentSong.uri !== "" 
 				? mpd.coverArtUrl
-				: "assets/default.png"
+				: "ui/assets/default.png"
 
                             onStatusChanged: {
                                 if (status === Image.Error) {
-                                    source = "assets/default_album.png"
+                                    source = "ui/assets/default_album.png"
                                 }
                             }
                         }
