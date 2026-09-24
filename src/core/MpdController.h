@@ -1,5 +1,8 @@
 #pragma once
 
+#include <algorithm>
+#include <random>
+
 #include <QObject>
 #include <QTimer>
 #include <QtQml/qqmlregistration.h>
@@ -20,6 +23,13 @@ public:
         Paused  = static_cast<int>(::PlaybackState::Paused)
     };
     Q_ENUM(PlaybackState)
+
+    enum QueueMode {
+	    ModeDefault,
+	    ModeShuffleFolder,
+	    ModeShuffleSelectedFolders
+    };
+    Q_ENUM(QueueMode)
 
     Q_PROPERTY(bool isConnected
 	       READ isConnected
@@ -49,6 +59,15 @@ public:
 	       READ coverArtUrl
 	       NOTIFY coverArtUrlChanged)
 
+    Q_PROPERTY(QueueMode queueMode 
+	       READ queueMode 
+	       WRITE setQueueMode 
+	       NOTIFY queueModeChanged)
+
+    Q_PROPERTY(QStringList selectedFolders 
+	       READ selectedFolders 
+	       NOTIFY selectedFoldersChanged)
+
 public:
     explicit MpdController(QObject *parent = nullptr);
 
@@ -59,6 +78,9 @@ public:
     QList<FileSystemItem> currentFiles() const;
     QString currentPath() const;
     QString coverArtUrl() const;
+    QueueMode queueMode() const;
+    void setQueueMode(QueueMode mode);
+    QStringList selectedFolders() const;
 
 
     Q_INVOKABLE void togglePlayPause();
@@ -68,6 +90,11 @@ public:
     Q_INVOKABLE void openFolder(const QString& path);
     Q_INVOKABLE void goUp();
     Q_INVOKABLE void playItem(const QString& uri);
+    Q_INVOKABLE void toggleSelectFolder(const QString& folderPath);
+    Q_INVOKABLE void clearSelectedFolders();
+    Q_INVOKABLE bool isFolderSelected(const QString& folderPath) const;
+    Q_INVOKABLE void playFolderQueue(const QString& folderPath, const QString& startUri = "");
+    Q_INVOKABLE void playCustomQueue();
 
 signals:
     void connectionChanged();
@@ -77,6 +104,8 @@ signals:
     void currentFilesChanged();
     void currentPathChanged();
     void coverArtUrlChanged();
+    void queueModeChanged();
+    void selectedFoldersChanged();
 
 private slots:
 	void updateStatus();
@@ -91,4 +120,6 @@ private:
     QList<FileSystemItem> m_currentFiles;
     QString m_currentPath = "";
     QString m_coverArtUrl;
+    QueueMode m_queueMode = ModeDefault;
+    QStringList m_selectedFolders;
 };

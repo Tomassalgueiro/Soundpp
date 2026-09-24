@@ -149,3 +149,83 @@ if (uri.isEmpty()) {
 
     emit coverArtUrlChanged();
 }
+
+void MpdController::setQueueMode(QueueMode mode) {
+    if (m_queueMode != mode) {
+        m_queueMode = mode;
+        emit queueModeChanged();
+    }
+}
+
+void MpdController::toggleSelectFolder(const QString& folderPath) {
+    if (m_selectedFolders.contains(folderPath)) {
+        m_selectedFolders.removeAll(folderPath);
+    } else {
+        m_selectedFolders.append(folderPath);
+    }
+    emit selectedFoldersChanged();
+}
+
+void MpdController::clearSelectedFolders() {
+    m_selectedFolders.clear();
+    emit selectedFoldersChanged();
+}
+
+bool MpdController::isFolderSelected(const QString& folderPath) const {
+    return m_selectedFolders.contains(folderPath);
+}
+
+void MpdController::playFolderQueue(const QString& folderPath, const QString& startUri) {
+    QList<QString> songs = m_connection.listSongsInDirectory(folderPath);
+    if (songs.isEmpty()) return;
+
+    int startIndex = 0;
+
+    if (m_queueMode == ModeShuffleFolder) {
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(songs.begin(), songs.end(), g);
+
+        if (!startUri.isEmpty()) {
+            int idx = songs.indexOf(startUri);
+            if (idx != -1) {
+                songs.swapItemsAt(0, idx);
+            }
+        }
+    } else {
+
+        if (!startUri.isEmpty()) {
+            int idx = songs.indexOf(startUri);
+            if (idx != -1) startIndex = idx;
+        }
+    }
+
+    m_connection.playQueue(songs, startIndex);
+    updateStatus();
+}
+
+void MpdController::playCustomQueue() {
+    if (m_selectedFolders.isEmpty()) return;
+
+    QList<QString> allSongs;
+    for (const QString& folder : m_selectedFolders) {
+        allSongs.append(m_connection.listSongsInDirectory(folder));
+    }
+
+    if (allSongs.isEmpty()) return;
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(allSongs.begin(), allSongs.end(), g);
+
+    m_connection.playQueue(allSongs, 0);
+    updateStatus();
+}
+
+MpdController::QueueMode MpdController::queueMode() const {
+    return m_queueMode;
+}
+
+QStringList MpdController::selectedFolders() const {
+    return m_selectedFolders;
+}

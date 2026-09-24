@@ -21,7 +21,7 @@ ApplicationWindow {
         anchors.margins: 16
         spacing: 12
 
-	Row {
+        Row {
             width: parent.width
             height: parent.height - playerControlsPanel.height - parent.spacing - 32
             spacing: 16
@@ -31,6 +31,7 @@ ApplicationWindow {
                 height: parent.height
                 spacing: 8
 
+                // Directory navigation row
                 Row {
                     width: parent.width
                     spacing: 8
@@ -51,33 +52,71 @@ ApplicationWindow {
                     }
                 }
 
+                // Queue Mode selector & Action Buttons
+                Row {
+                    width: parent.width
+                    spacing: 8
+
+                    ComboBox {
+                        id: modeSelector
+                        model: ["In-Order", "Shuffle Current", "Shuffle Selected Folders"]
+                        currentIndex: mpd.queueMode
+                        onActivated: function(index) {
+                            mpd.queueMode = index
+                        }
+                    }
+
+                    Button {
+                        text: "Play Selected (" + mpd.selectedFolders.length + ")"
+                        visible: mpd.queueMode === MpdController.ModeShuffleSelectedFolders
+                        enabled: mpd.selectedFolders.length > 0
+                        onClicked: mpd.playCustomQueue()
+                    }
+
+                    Button {
+                        text: "Clear"
+                        visible: mpd.queueMode === MpdController.ModeShuffleSelectedFolders && mpd.selectedFolders.length > 0
+                        onClicked: mpd.clearSelectedFolders()
+                    }
+                }
+
+                // File and folder list
                 ListView {
                     id: fileList
                     width: parent.width
-                    height: parent.height - 40
+                    height: parent.height - 85
                     clip: true
                     model: mpd.currentFiles
 
                     delegate: ItemDelegate {
                         width: fileList.width
-                        height: 38
+                        height: 40
 
                         contentItem: Row {
                             spacing: 10
                             anchors.verticalCenter: parent.verticalCenter
 
+                            CheckBox {
+                                anchors.verticalCenter: parent.verticalCenter
+                                visible: modelData.isDirectory && mpd.queueMode === MpdController.ModeShuffleSelectedFolders
+                                checked: mpd.isFolderSelected(modelData.path)
+                                onToggled: mpd.toggleSelectFolder(modelData.path)
+                            }
+
                             Text {
+                                anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.isDirectory ? "📁" : "🎵"
                                 font.pixelSize: 15
                             }
 
                             Text {
+                                anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.name
                                 color: modelData.isDirectory ? "#89b4fa" : "#cdd6f4"
                                 font.pixelSize: 13
                                 font.bold: modelData.isDirectory
                                 elide: Text.ElideRight
-                                width: fileList.width - 50
+                                width: fileList.width - 90
                             }
                         }
 
@@ -88,9 +127,13 @@ ApplicationWindow {
 
                         onClicked: {
                             if (modelData.isDirectory) {
-                                mpd.openFolder(modelData.path)
+                                if (mpd.queueMode === MpdController.ModeShuffleSelectedFolders) {
+                                    mpd.toggleSelectFolder(modelData.path)
+                                } else {
+                                    mpd.openFolder(modelData.path)
+                                }
                             } else {
-                                mpd.playItem(modelData.path)
+                                mpd.playFolderQueue(mpd.currentPath, modelData.path)
                             }
                         }
                     }
@@ -128,11 +171,11 @@ ApplicationWindow {
                             asynchronous: true
                             smooth: true
 
-			    readonly property string defaultCover: "assets/default_album.png"
+                            readonly property string defaultCover: "assets/default_album.png"
 
-			    source: (mpd.currentSong.uri !== "" && mpd.coverArtUrl !== "" )
-				? mpd.coverArtUrl
-				: defaultCover 
+                            source: (mpd.currentSong.uri !== "" && mpd.coverArtUrl !== "")
+                                    ? mpd.coverArtUrl
+                                    : defaultCover
 
                             onStatusChanged: {
                                 if (status === Image.Error) {
@@ -184,14 +227,12 @@ ApplicationWindow {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     visible: mpd.currentSong.artist !== ""
-		    text: {
-			    var artist = mpd.currentSong.artist
-			    var album = mpd.currentSong.album
-
-			    var hasAlbum = album && album.trim() !== "" && album !== "Uknown Album"
-
-			    return hasAlbum ? (artist + " on " + album) : artist
-		    }
+                    text: {
+                        var artist = mpd.currentSong.artist
+                        var album = mpd.currentSong.album
+                        var hasAlbum = album && album.trim() !== "" && album !== "Uknown Album"
+                        return hasAlbum ? (artist + " on " + album) : artist
+                    }
                     color: "#a6adc8"
                     font.pixelSize: 13
                 }

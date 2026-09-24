@@ -35,6 +35,9 @@ class MpdConnection{
 
 		QByteArray fetchAlbumArt(const QString& uri);
 
+		QList<QString> listSongsInDirectory(const QString& path);
+		bool playQueue(const QList<QString>& songUris, int startIndex = 0);
+
 	private:
 		struct mpd_connection* m_conn = nullptr;
 		bool checkError(const char* operation);

@@ -3,6 +3,7 @@
 #include <mpd/status.h>
 #include <mpd/entity.h>
 #include <mpd/song.h>
+#include <mpd/queue.h>
 #include <QDebug>
 #include <qstringview.h>
 
@@ -293,4 +294,49 @@ QByteArray MpdConnection::fetchAlbumArt(const QString& uri) {
 
     return imageBytes;
 
+}
+
+QList<QString> MpdConnection::listSongsInDirectory(const QString &path){
+	QList<QString> songs;
+    if (!m_conn) return songs;
+
+    if (!mpd_send_list_meta(m_conn, path.toUtf8().constData())) {
+        checkError("listing directory for queue");
+        return songs;
+    }
+
+    struct mpd_entity* entity;
+    while ((entity = mpd_recv_entity(m_conn)) != nullptr) {
+        if (mpd_entity_get_type(entity) == MPD_ENTITY_TYPE_SONG) {
+            const struct mpd_song* song = mpd_entity_get_song(entity);
+            songs.append(QString::fromUtf8(mpd_song_get_uri(song)));
+        }
+        mpd_entity_free(entity);
+    }
+    mpd_response_finish(m_conn);
+    return songs;
+}
+
+bool MpdConnection::playQueue(const QList<QString>& songUris, int startIndex) {
+    if (!m_conn || songUris.isEmpty()) return false;
+
+    if (!mpd_run_clear(m_conn)) {
+        return checkError("clearing queue");
+    }
+
+    mpd_command_list_begin(m_conn, true);
+    for (const QString& uri : songUris) {
+        mpd_send_add(m_conn, uri.toUtf8().constData());
+    }
+    mpd_command_list_end(m_conn);
+
+    if (!mpd_response_finish(m_conn)) {
+        return checkError("batch adding songs to queue");
+    }
+
+    if (!mpd_run_play_pos(m_conn, static_cast<unsigned>(startIndex))) {
+        return checkError("playing queue start track");
+    }
+
+    return true;
 }
