@@ -268,28 +268,29 @@ QByteArray MpdConnection::fetchAlbumArt(const QString& uri) {
 
     char chunk[8192];
     unsigned offset = 0;
-
-    while (true) {
-        int bytesRead = mpd_run_readpicture(
-            m_conn,
-            uri.toUtf8().constData(),
-            offset,
-            chunk,
-            sizeof(chunk)
-        );
-
-        if (bytesRead < 0) {
-            checkError("reading picture");
-            break;
+    auto readChunks = [&](auto readFunc) -> bool {
+        offset = 0;
+        while (true) {
+            int bytesRead = readFunc(m_conn, uri.toUtf8().constData(), offset, chunk, sizeof(chunk));
+            if (bytesRead < 0) {
+                mpd_connection_clear_error(m_conn); 
+                return false;
+            }
+            if (bytesRead == 0) {
+                break;
+            }
+            imageBytes.append(chunk, bytesRead);
+            offset += static_cast<unsigned>(bytesRead);
         }
+        return !imageBytes.isEmpty();
+    };
 
-        if (bytesRead == 0) {
-            break;
-        }
+    if (!readChunks(mpd_run_readpicture)) {
+        imageBytes.clear();
 
-        imageBytes.append(chunk, bytesRead);
-        offset += static_cast<unsigned>(bytesRead);
+        readChunks(mpd_run_albumart);
     }
 
     return imageBytes;
+
 }

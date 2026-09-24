@@ -5,6 +5,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <QFile>
+#include <QDateTime>
 
 MpdController::MpdController(QObject *parent)
     : QObject(parent){
@@ -58,7 +59,7 @@ void MpdController::updateStatus(){
 	}
 
 	SongMetadata newSong = m_connection.fetchCurrentSong();
-	if(newSong.title != m_currentSong.title || newSong.artist != m_currentSong.artist){
+	if(newSong.title != m_currentSong.title || newSong.artist != m_currentSong.artist || newSong.uri != m_currentSong.uri){
 		m_currentSong = newSong;
 		emit currentSongChanged();
 		updateCoverArt(m_currentSong.uri);

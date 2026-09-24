@@ -128,13 +128,15 @@ ApplicationWindow {
                             asynchronous: true
                             smooth: true
 
-			    source: mpd.currentSong.uri !== "" 
+			    readonly property string defaultCover: "assets/default_album.png"
+
+			    source: (mpd.currentSong.uri !== "" && mpd.coverArtUrl !== "" )
 				? mpd.coverArtUrl
-				: "ui/assets/default_album.png"
+				: defaultCover 
 
                             onStatusChanged: {
                                 if (status === Image.Error) {
-                                    source = "ui/assets/default_album.png"
+                                    source = defaultCover
                                 }
                             }
                         }
