@@ -73,11 +73,22 @@ void MpdController::updateStatus(){
 
 	}
 
+	if (m_queueMode != ModeDefault && !m_activeShufflePool.isEmpty()) {
+		QPair<int, int> qStatus = m_connection.fetchQueueStatus();
+		int pos = qStatus.first;
+		int length = qStatus.second;
+
+		if (pos >= 0 && pos == length - 1 && pos != m_lastHandledSongPos) {
+		    m_lastHandledSongPos = pos;
+		    reshuffleQueue();
+		}
+        }
+
 	QList<SongMetadata> nextSongs = m_connection.fetchUpNextSongs(5);
 	if (m_upNextSongs.size() != nextSongs.size() || (!nextSongs.isEmpty() && !m_upNextSongs.isEmpty() && nextSongs[0].uri != m_upNextSongs[0].uri)) {
-		m_upNextSongs = nextSongs;
-		emit upNextSongsChanged();
-    }
+	    m_upNextSongs = nextSongs;
+	    emit upNextSongsChanged();
+	}
 }
 
 int MpdController::elapsedTime() const {
@@ -246,4 +257,15 @@ void MpdController::playCustomQueue() {
 
     m_connection.playQueue(allSongs, 0);
     updateStatus();
+}
+
+void MpdController::reshuffleQueue(){
+    if (m_activeShufflePool.isEmpty()) return;
+
+	QList<QString> nextBatch = m_activeShufflePool;
+	std::random_device rd;
+	std::mt19937 g(rd());
+	std::shuffle(nextBatch.begin(), nextBatch.end(), g);
+
+	m_connection.appendQueue(nextBatch);
 }

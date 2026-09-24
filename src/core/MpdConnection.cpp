@@ -414,3 +414,15 @@ QPair<int, int> MpdConnection::fetchQueueStatus(){
 
 	return {songPos, queueLength};
 }
+
+bool MpdConnection::appendQueue(const QList<QString>& songUris){
+	if (!m_conn || songUris.isEmpty()) return false;
+
+	    mpd_command_list_begin(m_conn, true);
+	    for (const QString& uri : songUris) {
+		mpd_send_add(m_conn, uri.toUtf8().constData());
+	    }
+	    mpd_command_list_end(m_conn);
+
+	    return mpd_response_finish(m_conn);
+}
