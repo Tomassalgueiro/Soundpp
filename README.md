@@ -1,4 +1,4 @@
-# Sound++
+# Soundpp
 
 Music player written in C++ and using the Qt 6 Quick and MPD (`libmpdclient`).
 
