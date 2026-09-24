@@ -58,8 +58,8 @@ soudnpp
 ```
 ### Create your mpd config
 
-For this step you should check out mpd documentation, however my simple config just in case.
-You should add it to ~/config/mpd/mpd.conf and start the mpd service to update the config file.
+For this step you should check out mpd documentation, however my simple config just in case.  
+You should add it to ~/config/mpd/mpd.conf and start the mpd service to update the config file.  
 Save your songs at ~/Music, feel free to create folders to separte by genre/artist or whatever your sorting method is.
 
 ```conf
