@@ -1,6 +1,12 @@
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls.Basic
 import PlayerBackend 1.0
+
+// All colours and fonts live in Theme.qml, all icons in Icons.qml — nothing
+// below hardcodes either, so a new theme never needs touching this file.
+// (Controls.Basic is used instead of Controls so the custom backgrounds
+// below aren't fought by whatever native style is set on the target
+// machine.)
 
 ApplicationWindow {
     id: root
@@ -10,7 +16,9 @@ ApplicationWindow {
     minimumHeight: 480
     visible: true
     title: qsTr("MPD Music Browser")
-    color: "#1e1e2e"
+    color: theme.background
+
+    Theme { id: theme }
 
     MpdController {
         id: mpd
@@ -34,97 +42,258 @@ ApplicationWindow {
 
                 Row {
                     width: parent.width
-                    spacing: 8
+                    height: 34
+                    spacing: 10
 
-                    Button {
-                        text: "↑ Up"
-                        enabled: mpd.currentPath !== ""
-                        onClicked: mpd.goUp()
+                    Rectangle {
+                        width: 34; height: 34; radius: 4
+                        color: upHover.containsMouse ? theme.panelRaised : "transparent"
+                        border.color: theme.hairline
+                        border.width: 1
+                        opacity: mpd.currentPath !== "" ? 1.0 : 0.4
+
+                        Icons {
+                            anchors.centerIn: parent
+                            name: "chevronUp"
+                            color: theme.textPrimary
+                        }
+
+                        MouseArea {
+                            id: upHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            enabled: mpd.currentPath !== ""
+                            onClicked: mpd.goUp()
+                        }
                     }
 
-                    Label {
+                    Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: mpd.currentPath === "" ? "/ (Music Root)" : "/" + mpd.currentPath
-                        color: "#a6adc8"
-                        font.pixelSize: 13
+                        color: theme.textSecondary
+                        font.family: theme.fontMono
+                        font.pixelSize: 12
                         elide: Text.ElideLeft
-                        width: parent.width - 80
+                        width: parent.width - 44
                     }
                 }
 
                 Row {
                     width: parent.width
-                    spacing: 8
+                    height: 34
+                    spacing: 10
 
                     ComboBox {
                         id: modeSelector
+                        height: 34
+                        padding: 0
                         model: ["In-Order", "Shuffle Current", "Shuffle Selected Folders"]
                         currentIndex: mpd.queueMode
                         onActivated: function(index) {
                             mpd.queueMode = index
                         }
+
+                        background: Rectangle {
+                            implicitWidth: 190
+                            radius: 4
+                            color: theme.panel
+                            border.color: theme.hairline
+                            border.width: 1
+                        }
+
+                        contentItem: Text {
+                            leftPadding: 12
+                            rightPadding: 28
+                            text: modeSelector.displayText
+                            color: theme.textPrimary
+                            font.family: theme.fontDisplay
+                            font.pixelSize: 12
+                            verticalAlignment: Text.AlignVCenter
+                            elide: Text.ElideRight
+                        }
+
+                        indicator: Icons {
+                            anchors.right: parent.right
+                            anchors.rightMargin: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            name: "chevronDown"
+                            color: theme.textSecondary
+                        }
+
+                        popup: Popup {
+                            y: modeSelector.height + 2
+                            width: modeSelector.width
+                            implicitHeight: contentItem.implicitHeight + 2
+                            padding: 1
+
+                            background: Rectangle {
+                                color: theme.panel
+                                border.color: theme.hairline
+                                border.width: 1
+                                radius: 4
+                            }
+
+                            contentItem: ListView {
+                                clip: true
+                                implicitHeight: contentHeight
+                                model: modeSelector.popup.visible ? modeSelector.delegateModel : null
+                                currentIndex: modeSelector.highlightedIndex
+                                ScrollIndicator.vertical: ScrollIndicator {}
+                            }
+                        }
+
+                        delegate: ItemDelegate {
+                            width: modeSelector.width
+                            padding: 0
+                            highlighted: modeSelector.highlightedIndex === index
+
+                            contentItem: Text {
+                                leftPadding: 12
+                                text: modelData
+                                color: theme.textPrimary
+                                font.family: theme.fontDisplay
+                                font.pixelSize: 12
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            background: Rectangle {
+                                color: parent.highlighted ? theme.panelRaised : "transparent"
+                            }
+                        }
                     }
 
                     Button {
-                        text: "Play Selected (" + mpd.selectedFolders.length + ")"
+                        text: "Play selected (" + mpd.selectedFolders.length + ")"
                         visible: mpd.queueMode === MpdController.ModeShuffleSelectedFolders
                         enabled: mpd.selectedFolders.length > 0
+                        padding: 0
                         onClicked: mpd.playCustomQueue()
+
+                        background: Rectangle {
+                            implicitHeight: 34
+                            radius: 4
+                            color: parent.hovered ? theme.panelRaised : "transparent"
+                            border.color: theme.hairline
+                            border.width: 1
+                            opacity: parent.enabled ? 1.0 : 0.4
+                        }
+
+                        contentItem: Text {
+                            leftPadding: 12
+                            rightPadding: 12
+                            text: parent.text
+                            color: theme.textPrimary
+                            font.family: theme.fontDisplay
+                            font.pixelSize: 12
+                            verticalAlignment: Text.AlignVCenter
+                        }
                     }
 
                     Button {
                         text: "Clear"
                         visible: mpd.queueMode === MpdController.ModeShuffleSelectedFolders && mpd.selectedFolders.length > 0
+                        padding: 0
                         onClicked: mpd.clearSelectedFolders()
+
+                        background: Rectangle {
+                            implicitHeight: 34
+                            radius: 4
+                            color: parent.hovered ? theme.panelRaised : "transparent"
+                            border.color: theme.hairline
+                            border.width: 1
+                        }
+
+                        contentItem: Text {
+                            leftPadding: 12
+                            rightPadding: 12
+                            text: parent.text
+                            color: theme.textSecondary
+                            font.family: theme.fontDisplay
+                            font.pixelSize: 12
+                            verticalAlignment: Text.AlignVCenter
+                        }
                     }
                 }
 
                 ListView {
                     id: fileList
                     width: parent.width
-                    height: parent.height - 85
+                    height: parent.height - 84
                     clip: true
                     model: mpd.currentFiles
 
                     delegate: ItemDelegate {
+                        id: rowDelegate
                         width: fileList.width
-                        height: 40
+                        height: 44
+                        padding: 0
+                        hoverEnabled: true
+
+                        readonly property bool isFolder: modelData.isDirectory
+                        readonly property bool selectable: isFolder && mpd.queueMode === MpdController.ModeShuffleSelectedFolders
+                        readonly property bool isSelected: isFolder && mpd.isFolderSelected(modelData.path)
 
                         contentItem: Row {
-                            spacing: 10
-                            anchors.verticalCenter: parent.verticalCenter
+                            leftPadding: 16
+                            rightPadding: 8
+                            spacing: 12
 
-                            CheckBox {
+                            Rectangle {
+                                width: 18; height: 18; radius: 3
                                 anchors.verticalCenter: parent.verticalCenter
-                                visible: modelData.isDirectory && mpd.queueMode === MpdController.ModeShuffleSelectedFolders
-                                checked: mpd.isFolderSelected(modelData.path)
-                                onToggled: mpd.toggleSelectFolder(modelData.path)
+                                visible: rowDelegate.selectable
+                                color: "transparent"
+                                border.color: theme.hairline
+                                border.width: 1
+
+                                Icons {
+                                    anchors.centerIn: parent
+                                    name: "check"
+                                    color: theme.accent
+                                    weight: 1.6
+                                    visible: rowDelegate.isSelected
+                                }
                             }
 
-                            Text {
+                            Icons {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.isDirectory ? "📁" : "🎵"
-                                font.pixelSize: 15
+                                name: rowDelegate.isFolder ? "folder" : "track"
+                                color: rowDelegate.isFolder ? theme.accent : theme.textFaint
                             }
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.name
-                                color: modelData.isDirectory ? "#89b4fa" : "#cdd6f4"
+                                color: theme.textPrimary
+                                font.family: theme.fontDisplay
                                 font.pixelSize: 13
-                                font.bold: modelData.isDirectory
+                                font.weight: rowDelegate.isFolder ? Font.DemiBold : Font.Normal
                                 elide: Text.ElideRight
-                                width: fileList.width - 90
+                                width: fileList.width - (rowDelegate.selectable ? 82 : 52)
                             }
                         }
 
                         background: Rectangle {
-                            color: parent.hovered ? "#313244" : "transparent"
-                            radius: 4
+                            color: parent.hovered ? theme.panelRaised : "transparent"
+
+                            Rectangle {
+                                anchors.left: parent.left
+                                width: 2
+                                height: parent.height
+                                color: rowDelegate.isSelected ? theme.accent : "transparent"
+                            }
+
+                            Rectangle {
+                                anchors.bottom: parent.bottom
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                height: 1
+                                color: theme.hairline
+                            }
                         }
 
                         onClicked: {
-                            if (modelData.isDirectory) {
+                            if (isFolder) {
                                 if (mpd.queueMode === MpdController.ModeShuffleSelectedFolders) {
                                     mpd.toggleSelectFolder(modelData.path)
                                 } else {
@@ -137,7 +306,9 @@ ApplicationWindow {
                     }
 
                     ScrollBar.vertical: ScrollBar {
-                        active: true
+                        policy: ScrollBar.AsNeeded
+                        contentItem: Rectangle { implicitWidth: 4; radius: 2; color: theme.hairline }
+                        background: Item {}
                     }
                 }
             }
@@ -146,26 +317,29 @@ ApplicationWindow {
             Rectangle {
                 width: (parent.width - parent.spacing) * 0.30
                 height: parent.height
-                color: "#181825"
-                radius: 8
-                clip: true
+                color: theme.panel
+
+                Rectangle { anchors.left: parent.left; width: 1; height: parent.height; color: theme.hairline }
 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 8
+                    anchors.margins: 16
+                    spacing: 10
 
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: Math.min(parent.width, 170)
                         height: width
-                        radius: 8
-                        color: "#313244"
+                        radius: 4
+                        color: theme.panelRaised
+                        border.color: theme.hairline
+                        border.width: 1
                         clip: true
 
                         Image {
                             id: albumCover
                             anchors.fill: parent
+                            anchors.margins: 1
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                             smooth: true
@@ -185,27 +359,23 @@ ApplicationWindow {
                     }
 
                     Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: mpd.currentSong.album || "No Album"
-                        color: "#a6adc8"
-                        font.pixelSize: 12
-                        font.italic: true
-                        elide: Text.ElideRight
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
+                        text: mpd.currentSong.album || "No Album"
+                        color: theme.textSecondary
+                        font.family: theme.fontDisplay
+                        font.pixelSize: 12
+                        elide: Text.ElideRight
                     }
 
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: "#313244"
-                    }
+                    Rectangle { width: parent.width; height: 1; color: theme.hairline }
 
                     Text {
-                        text: "UP NEXT"
+                        text: "Up next"
+                        color: theme.textFaint
+                        font.family: theme.fontMono
                         font.pixelSize: 11
-                        font.bold: true
-                        color: "#89b4fa"
+                        font.capitalization: Font.AllUppercase
                     }
 
                     ListView {
@@ -217,27 +387,42 @@ ApplicationWindow {
 
                         delegate: Item {
                             width: upNextList.width
-                            height: 36
+                            height: 38
 
-                            Column {
+                            Row {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: parent.width
-                                spacing: 2
+                                spacing: 10
 
                                 Text {
-                                    text: (index + 1) + ". " + modelData.title
-                                    color: "#cdd6f4"
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    elide: Text.ElideRight
-                                    width: parent.width
-                                }
-                                Text {
-                                    text: modelData.artist
-                                    color: "#6c7086"
+                                    width: 16
+                                    text: (index + 1).toString()
+                                    color: theme.textFaint
+                                    font.family: theme.fontMono
                                     font.pixelSize: 11
-                                    elide: Text.ElideRight
-                                    width: parent.width
+                                }
+
+                                Column {
+                                    width: parent.width - 26
+                                    spacing: 1
+
+                                    Text {
+                                        width: parent.width
+                                        text: modelData.title
+                                        color: theme.textSecondary
+                                        font.family: theme.fontDisplay
+                                        font.pixelSize: 12
+                                        elide: Text.ElideRight
+                                    }
+
+                                    Text {
+                                        width: parent.width
+                                        text: modelData.artist
+                                        color: theme.textFaint
+                                        font.family: theme.fontDisplay
+                                        font.pixelSize: 10
+                                        elide: Text.ElideRight
+                                    }
                                 }
                             }
                         }
@@ -246,7 +431,8 @@ ApplicationWindow {
                             anchors.centerIn: parent
                             visible: upNextList.count === 0
                             text: "Queue ended"
-                            color: "#585b70"
+                            color: theme.textFaint
+                            font.family: theme.fontDisplay
                             font.pixelSize: 12
                         }
                     }
@@ -257,14 +443,14 @@ ApplicationWindow {
         Rectangle {
             width: parent.width
             height: 1
-            color: "#313244"
+            color: theme.hairline
         }
 
         // Bottom: Player Controls
         Column {
             id: playerControlsPanel
             width: parent.width
-            spacing: 8
+            spacing: 10
 
             Column {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -274,9 +460,10 @@ ApplicationWindow {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: mpd.currentSong.title !== "" ? mpd.currentSong.title : "No Track Selected"
-                    color: "#cdd6f4"
-                    font.pixelSize: 18
-                    font.bold: true
+                    color: theme.textPrimary
+                    font.family: theme.fontDisplay
+                    font.pixelSize: 17
+                    font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
 
@@ -289,7 +476,8 @@ ApplicationWindow {
                         var hasAlbum = album && album.trim() !== "" && album !== "Uknown Album"
                         return hasAlbum ? (artist + " on " + album) : artist
                     }
-                    color: "#a6adc8"
+                    color: theme.textSecondary
+                    font.family: theme.fontDisplay
                     font.pixelSize: 13
                 }
             }
@@ -297,6 +485,7 @@ ApplicationWindow {
             TrackSlider {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width - 40
+                theme: theme
                 duration: mpd.currentSong.duration
                 elapsedTime: mpd.elapsedTime
                 isConnected: mpd.isConnected
@@ -307,24 +496,56 @@ ApplicationWindow {
 
             Row {
                 anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 14
+                spacing: 18
 
-                Button {
-                    text: "⏮"
-                    enabled: mpd.isConnected
-                    onClicked: mpd.previous()
+                Rectangle {
+                    width: 32; height: 32; radius: 4
+                    color: prevHover.containsMouse ? theme.panelRaised : "transparent"
+                    opacity: mpd.isConnected ? 1.0 : 0.4
+
+                    Icons { anchors.centerIn: parent; name: "prev"; color: theme.textPrimary }
+
+                    MouseArea {
+                        id: prevHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        enabled: mpd.isConnected
+                        onClicked: mpd.previous()
+                    }
                 }
 
-                Button {
-                    text: mpd.playbackState === MpdController.Playing ? "⏸" : "▶"
-                    enabled: mpd.isConnected
-                    onClicked: mpd.togglePlayPause()
+                Rectangle {
+                    width: 44; height: 44; radius: 6
+                    color: theme.accent
+                    opacity: mpd.isConnected ? 1.0 : 0.4
+
+                    Icons {
+                        anchors.centerIn: parent
+                        name: mpd.playbackState === MpdController.Playing ? "pause" : "play"
+                        color: theme.accentInk
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        enabled: mpd.isConnected
+                        onClicked: mpd.togglePlayPause()
+                    }
                 }
 
-                Button {
-                    text: "⏭"
-                    enabled: mpd.isConnected
-                    onClicked: mpd.next()
+                Rectangle {
+                    width: 32; height: 32; radius: 4
+                    color: nextHover.containsMouse ? theme.panelRaised : "transparent"
+                    opacity: mpd.isConnected ? 1.0 : 0.4
+
+                    Icons { anchors.centerIn: parent; name: "next"; color: theme.textPrimary }
+
+                    MouseArea {
+                        id: nextHover
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        enabled: mpd.isConnected
+                        onClicked: mpd.next()
+                    }
                 }
             }
         }
