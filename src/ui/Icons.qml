@@ -1,14 +1,3 @@
-// =============================================================================
-// Icons.qml — small monochrome vector icon set drawn on a Canvas.
-//
-// Every icon in the interface is one of the shapes below rather than a
-// coloured emoji glyph, so icon colour always comes from Theme and always
-// matches the current theme instead of the font's built-in emoji palette.
-//
-// Usage:
-//   Icons { name: "play"; color: theme.accentInk }
-// =============================================================================
-
 import QtQuick
 
 Canvas {

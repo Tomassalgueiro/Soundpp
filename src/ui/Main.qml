@@ -2,12 +2,6 @@ import QtQuick
 import QtQuick.Controls.Basic
 import PlayerBackend 1.0
 
-// All colours and fonts live in Theme.qml, all icons in Icons.qml — nothing
-// below hardcodes either, so a new theme never needs touching this file.
-// (Controls.Basic is used instead of Controls so the custom backgrounds
-// below aren't fought by whatever native style is set on the target
-// machine.)
-
 ApplicationWindow {
     id: root
     width: 800

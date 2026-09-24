@@ -1,10 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic
 
-// Same public API as before (duration, elapsedTime, isConnected,
-// seekRequested) — only the visuals changed: a thin hairline track with an
-// accent fill and a small diamond handle instead of a default pill slider.
-// Colours come from `theme` (see Theme.qml), passed in by whoever uses this.
 Item {
     id: root
 

@@ -1,38 +1,21 @@
-// =============================================================================
-// Theme.qml — every colour and typeface the UI uses, in one place.
-//
-// Main.qml, TrackSlider.qml and Icons.qml never hardcode a colour or a font
-// family — they all read it from an instance of this file. To make a new
-// theme, copy this file, change the values below, and swap it in (or expose
-// several Theme variants and let the app pick one at startup).
-//
-// Usage:
-//   Theme { id: theme }
-//   Rectangle { color: theme.background }
-// =============================================================================
-
 import QtQuick
 
 QtObject {
     id: theme
 
-    // ---- Palette ----------------------------------------------------------
-    // Keep the accent to a single colour, used sparingly: the play button,
-    // the active/selected row, and the seek handle. Everything else stays
-    // neutral so the accent keeps its meaning.
-    readonly property color background:    "#12151b"  // window background
-    readonly property color panel:         "#181c24"  // side panel / popups
-    readonly property color panelRaised:   "#1f242e"  // hover fill, pressed state
-    readonly property color hairline:      "#2a2f3a"  // borders and divider lines
-    readonly property color accent:        "#c99a4b"  // brass accent
-    readonly property color accentInk:     "#141821"  // content drawn on top of `accent`
-    readonly property color textPrimary:   "#eae7e1"  // titles, primary labels
-    readonly property color textSecondary: "#9aa0ab"  // artist/album, secondary labels
-    readonly property color textFaint:     "#5b6069"  // timestamps, counters, disabled text
+    readonly property color background:    "#2d353b"  // bg0: window background
+    readonly property color panel:         "#343f44"  // bg1: side panel / popups
+    readonly property color panelRaised:   "#3d484d"  // bg2: hover fill, pressed state
+    readonly property color hairline:      "#475258"  // bg4: subtle borders and divider lines
+    readonly property color accent:        "#a7c080"  // color1: signature accent
+    readonly property color accentInk:     "#232a2e"  // bg_dim: dark content drawn on accent
+    readonly property color textPrimary:   "#d3c6aa"  // fg: titles, primary labels
+    readonly property color textSecondary: "#9da9a0"  // grey1 / muted aqua: secondary labels
+    readonly property color textFaint:     "#7a8478"  // grey0: timestamps, counters, disabled text
 
-    // ---- Typography ---------------------------------------------------------
+    // Fonts
     // Falls back to the platform default sans/monospace if these aren't
     // installed. Install "Inter" and "JetBrains Mono" for the intended look.
     readonly property string fontDisplay: "Inter"
-    readonly property string fontMono:    "JetBrains Mono"
+    readonly property string fontMono:    "JetBrainsMono Nerd Font"
 }
