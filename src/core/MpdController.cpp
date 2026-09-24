@@ -13,6 +13,7 @@ MpdController::MpdController(QObject *parent)
 		emit connectionChanged();
 		updateStatus();
 		openFolder("");
+		m_connection.setRepeat(true);
 
 		connect(&m_pollTimer, &QTimer::timeout, this, &MpdController::updateStatus);
 		m_pollTimer.start(500);
@@ -71,6 +72,12 @@ void MpdController::updateStatus(){
 		emit elapsedTimeChanged();
 
 	}
+
+	QList<SongMetadata> nextSongs = m_connection.fetchUpNextSongs(5);
+	if (m_upNextSongs.size() != nextSongs.size() || (!nextSongs.isEmpty() && !m_upNextSongs.isEmpty() && nextSongs[0].uri != m_upNextSongs[0].uri)) {
+		m_upNextSongs = nextSongs;
+		emit upNextSongsChanged();
+    }
 }
 
 int MpdController::elapsedTime() const {
@@ -175,13 +182,27 @@ bool MpdController::isFolderSelected(const QString& folderPath) const {
     return m_selectedFolders.contains(folderPath);
 }
 
+MpdController::QueueMode MpdController::queueMode() const {
+    return m_queueMode;
+}
+
+QStringList MpdController::selectedFolders() const {
+    return m_selectedFolders;
+}
+
+QList<SongMetadata> MpdController::upNextSongs() const {
+	return m_upNextSongs;
+}
+
 void MpdController::playFolderQueue(const QString& folderPath, const QString& startUri) {
     QList<QString> songs = m_connection.listSongsInDirectory(folderPath);
     if (songs.isEmpty()) return;
 
-    int startIndex = 0;
+    m_lastHandledSongPos = -1;
 
     if (m_queueMode == ModeShuffleFolder) {
+        m_activeShufflePool = songs;
+
         std::random_device rd;
         std::mt19937 g(rd());
         std::shuffle(songs.begin(), songs.end(), g);
@@ -193,11 +214,13 @@ void MpdController::playFolderQueue(const QString& folderPath, const QString& st
             }
         }
     } else {
+        m_activeShufflePool.clear();
+    }
 
-        if (!startUri.isEmpty()) {
-            int idx = songs.indexOf(startUri);
-            if (idx != -1) startIndex = idx;
-        }
+    int startIndex = 0;
+    if (m_queueMode == ModeDefault && !startUri.isEmpty()) {
+        int idx = songs.indexOf(startUri);
+        if (idx != -1) startIndex = idx;
     }
 
     m_connection.playQueue(songs, startIndex);
@@ -214,18 +237,13 @@ void MpdController::playCustomQueue() {
 
     if (allSongs.isEmpty()) return;
 
+    m_activeShufflePool = allSongs; 
+    m_lastHandledSongPos = -1;
+
     std::random_device rd;
     std::mt19937 g(rd());
     std::shuffle(allSongs.begin(), allSongs.end(), g);
 
     m_connection.playQueue(allSongs, 0);
     updateStatus();
-}
-
-MpdController::QueueMode MpdController::queueMode() const {
-    return m_queueMode;
-}
-
-QStringList MpdController::selectedFolders() const {
-    return m_selectedFolders;
 }

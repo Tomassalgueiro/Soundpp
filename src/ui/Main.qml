@@ -26,12 +26,12 @@ ApplicationWindow {
             height: parent.height - playerControlsPanel.height - parent.spacing - 32
             spacing: 16
 
+            // Left side: Directory browser and queue mode selection
             Column {
                 width: (parent.width - parent.spacing) * 0.70
                 height: parent.height
                 spacing: 8
 
-                // Directory navigation row
                 Row {
                     width: parent.width
                     spacing: 8
@@ -52,7 +52,6 @@ ApplicationWindow {
                     }
                 }
 
-                // Queue Mode selector & Action Buttons
                 Row {
                     width: parent.width
                     spacing: 8
@@ -80,7 +79,6 @@ ApplicationWindow {
                     }
                 }
 
-                // File and folder list
                 ListView {
                     id: fileList
                     width: parent.width
@@ -144,6 +142,7 @@ ApplicationWindow {
                 }
             }
 
+            // Right side: Album cover, metadata, and Up Next
             Rectangle {
                 width: (parent.width - parent.spacing) * 0.30
                 height: parent.height
@@ -152,13 +151,13 @@ ApplicationWindow {
                 clip: true
 
                 Column {
-                    anchors.centerIn: parent
-                    spacing: 12
-                    width: parent.width - 24
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 8
 
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: Math.min(parent.width, 220)
+                        width: Math.min(parent.width, 170)
                         height: width
                         radius: 8
                         color: "#313244"
@@ -195,6 +194,62 @@ ApplicationWindow {
                         width: parent.width
                         horizontalAlignment: Text.AlignHCenter
                     }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: "#313244"
+                    }
+
+                    Text {
+                        text: "UP NEXT"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: "#89b4fa"
+                    }
+
+                    ListView {
+                        id: upNextList
+                        width: parent.width
+                        height: parent.height - y - 8
+                        clip: true
+                        model: mpd.upNextSongs
+
+                        delegate: Item {
+                            width: upNextList.width
+                            height: 36
+
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: parent.width
+                                spacing: 2
+
+                                Text {
+                                    text: (index + 1) + ". " + modelData.title
+                                    color: "#cdd6f4"
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                    width: parent.width
+                                }
+                                Text {
+                                    text: modelData.artist
+                                    color: "#6c7086"
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                    width: parent.width
+                                }
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: upNextList.count === 0
+                            text: "Queue ended"
+                            color: "#585b70"
+                            font.pixelSize: 12
+                        }
+                    }
                 }
             }
         }
@@ -205,6 +260,7 @@ ApplicationWindow {
             color: "#313244"
         }
 
+        // Bottom: Player Controls
         Column {
             id: playerControlsPanel
             width: parent.width

@@ -5,6 +5,7 @@
 #include <mpd/song.h>
 #include <mpd/queue.h>
 #include <QDebug>
+#include <qlist.h>
 #include <qstringview.h>
 
 MpdConnection::MpdConnection() = default;
@@ -130,6 +131,13 @@ bool MpdConnection::previous(){
 	return true;
 }
 
+bool MpdConnection::setRepeat(bool enable){
+	if(!m_conn) return false;
+	if (!mpd_run_repeat(m_conn, enable)){
+		return checkError("setting repeat mode");
+	}
+	return true;
+}
 PlaybackState MpdConnection::fetchPlaybackState(){
 	if (!m_conn) return PlaybackState::Stopped;
 
@@ -339,4 +347,70 @@ bool MpdConnection::playQueue(const QList<QString>& songUris, int startIndex) {
     }
 
     return true;
+}
+
+QList<SongMetadata> MpdConnection::fetchUpNextSongs(int limit) {
+    QList<SongMetadata> upNextList;
+    if (!m_conn) return upNextList;
+
+    struct mpd_status* status = mpd_run_status(m_conn);
+    if (!status) {
+        checkError("fetching status for up-next queue");
+        return upNextList;
+    }
+
+    int songPos = mpd_status_get_song_pos(status);
+    unsigned queueLength = mpd_status_get_queue_length(status);
+    mpd_status_free(status);
+
+    if (songPos < 0 || static_cast<unsigned>(songPos + 1) >= queueLength) {
+        return upNextList;
+    }
+
+    unsigned startPos = static_cast<unsigned>(songPos + 1);
+    unsigned endPos = std::min(startPos + static_cast<unsigned>(limit), queueLength);
+
+    if (!mpd_send_list_queue_range_meta(m_conn, startPos, endPos)) {
+        checkError("fetching queue range");
+        return upNextList;
+    }
+
+    struct mpd_entity* entity;
+    while ((entity = mpd_recv_entity(m_conn)) != nullptr) {
+        if (mpd_entity_get_type(entity) == MPD_ENTITY_TYPE_SONG) {
+            const struct mpd_song* song = mpd_entity_get_song(entity);
+            const char* title = mpd_song_get_tag(song, MPD_TAG_TITLE, 0);
+            const char* artist = mpd_song_get_tag(song, MPD_TAG_ARTIST, 0);
+            const char* album = mpd_song_get_tag(song, MPD_TAG_ALBUM, 0);
+
+            SongMetadata meta;
+            meta.title = title ? QString::fromUtf8(title) : QString::fromUtf8(mpd_song_get_uri(song)).section('/', -1);
+            meta.artist = artist ? QString::fromUtf8(artist) : QStringLiteral("Unknown Artist");
+            meta.album = album ? QString::fromUtf8(album) : QStringLiteral("");
+            meta.duration = mpd_song_get_duration(song);
+            meta.uri = QString::fromUtf8(mpd_song_get_uri(song));
+
+            upNextList.append(meta);
+        }
+        mpd_entity_free(entity);
+    }
+    mpd_response_finish(m_conn);
+
+    return upNextList;
+}
+
+QPair<int, int> MpdConnection::fetchQueueStatus(){
+	if (!m_conn) return {-1, 0};
+
+	struct mpd_status* status = mpd_run_status(m_conn);
+	if(!status){
+		checkError("fetching queue status");
+		return {-1, 0};
+	}
+
+	int songPos = mpd_status_get_song_pos(status);
+	int queueLength = static_cast<int>(mpd_status_get_queue_length(status));
+	mpd_status_free(status);
+
+	return {songPos, queueLength};
 }

@@ -23,6 +23,8 @@ class MpdConnection{
 		bool togglePause();
 		bool next();
 		bool previous();
+		bool setRepeat(bool enable);
+		bool appendQueue(const QList<QString>& songUris);
 
 		PlaybackState fetchPlaybackState();
 		SongMetadata fetchCurrentSong();
@@ -37,6 +39,10 @@ class MpdConnection{
 
 		QList<QString> listSongsInDirectory(const QString& path);
 		bool playQueue(const QList<QString>& songUris, int startIndex = 0);
+		QList<SongMetadata> fetchUpNextSongs(int limit = 5);
+
+		QPair<int, int> fetchQueueStatus();
+
 
 	private:
 		struct mpd_connection* m_conn = nullptr;

@@ -68,6 +68,10 @@ public:
 	       READ selectedFolders 
 	       NOTIFY selectedFoldersChanged)
 
+    Q_PROPERTY(QList<SongMetadata> upNextSongs
+	       READ upNextSongs
+	       NOTIFY upNextSongsChanged)
+
 public:
     explicit MpdController(QObject *parent = nullptr);
 
@@ -81,6 +85,8 @@ public:
     QueueMode queueMode() const;
     void setQueueMode(QueueMode mode);
     QStringList selectedFolders() const;
+    QList<SongMetadata> upNextSongs() const;
+    void reshuffleQueue();
 
 
     Q_INVOKABLE void togglePlayPause();
@@ -106,6 +112,7 @@ signals:
     void coverArtUrlChanged();
     void queueModeChanged();
     void selectedFoldersChanged();
+    void upNextSongsChanged();
 
 private slots:
 	void updateStatus();
@@ -122,4 +129,7 @@ private:
     QString m_coverArtUrl;
     QueueMode m_queueMode = ModeDefault;
     QStringList m_selectedFolders;
+    QList<SongMetadata> m_upNextSongs;
+    QList<QString> m_activeShufflePool;
+    int m_lastHandledSongPos = -1;
 };
