@@ -2,6 +2,9 @@
 
 Music player written in C++ and using the Qt 6 Quick and MPD (`libmpdclient`).
 
+## Preview
+![](assets/soundpp-preview.png)
+
 ## Features
 
 - **MPD Integration**: Real-time playback status and timeline seeking.
