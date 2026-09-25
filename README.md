@@ -50,7 +50,7 @@ cmake --build .
 # Ensure ~/.local/bin exists
 mkdir -p ~/.local/bin
 
-# Install it system wide
+# Install it system wide [ you will need to this to update the config theme everytime :( ]
 sudo cmake --install build
 
 # Open the program
