@@ -50,8 +50,8 @@ cmake --build .
 # Ensure ~/.local/bin exists
 mkdir -p ~/.local/bin
 
-# Create a symlink to your compiled executable
-ln -sf /home/guinhas/projects/music-player/build/Soundpp ~/.local/bin/soundpp
+# Install it system wide
+sudo cmake --install build
 
 # Open the program
 soudnpp 

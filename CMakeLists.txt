@@ -53,3 +53,17 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core
 )
+
+set_target_properties(Soundpp PROPERTIES OUTPUT_NAME "soundpp")
+
+install(TARGETS Soundpp
+    DESTINATION bin
+)
+
+install(FILES soundpp.desktop
+    DESTINATION share/applications
+)
+
+install(FILES assets/soundpp.png
+    DESTINATION share/icons/hicolor/512x512/apps
+)
