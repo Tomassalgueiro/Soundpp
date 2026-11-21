@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFile>
 #include <QDateTime>
+#include <QCoreApplication>
 
 MpdController::MpdController(QObject *parent)
     : QObject(parent){
@@ -18,6 +19,14 @@ MpdController::MpdController(QObject *parent)
 		connect(&m_pollTimer, &QTimer::timeout, this, &MpdController::updateStatus);
 		m_pollTimer.start(500);
 	    }
+
+	    // Pause MPD when the app exits so playback doesn't outlive the window.
+	    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, [this]() {
+		m_pollTimer.stop();
+		// Unconditional: the cached state may be up to one poll stale, and
+		// "pause 1" is a no-op in MPD when nothing is playing.
+		m_connection.pause(true);
+	    });
 }
 
 bool MpdController::isConnected() const
