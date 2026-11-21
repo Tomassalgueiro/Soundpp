@@ -225,7 +225,9 @@ ApplicationWindow {
 
                         readonly property bool isFolder: modelData.isDirectory
                         readonly property bool selectable: isFolder && mpd.queueMode === MpdController.ModeShuffleSelectedFolders
-                        readonly property bool isSelected: isFolder && mpd.isFolderSelected(modelData.path)
+                        // Read the selectedFolders property directly so the binding re-evaluates on
+                        // selectedFoldersChanged; a Q_INVOKABLE call creates no property dependency.
+                        readonly property bool isSelected: isFolder && mpd.selectedFolders.indexOf(modelData.path) !== -1
 
                         contentItem: Row {
                             leftPadding: 16
