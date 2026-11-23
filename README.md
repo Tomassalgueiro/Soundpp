@@ -92,5 +92,5 @@ You can customize this app by opening up the src/ui/ directory and modifying the
 - [ ] Volume Control 
 - [ ] Add songs to queue manually
 - [ ] Make customization easier
-- [ ] Stop the audio after program is killed (mpd side)
-- [ ] Create .desktop file (for launchers to be able to see the program)
+- [x] Stop the audio after program is killed (mpd side)
+- [x] Create .desktop file (for launchers to be able to see the program)
